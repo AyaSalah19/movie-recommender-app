@@ -27,8 +27,8 @@ div.stButton > button:first-child {
     font-size: 24px;
     padding: 18px 0px;
     border-radius: 12px;
-    background-color: var(--background-color);
-color: var(--text-color);
+    background-color: #3b82f6;
+    color: white;
     border: none;
 }
 
@@ -115,7 +115,7 @@ colA, colB, colC = st.columns([1,4,1])
 
 with colB:
     recommend = st.button(
-        "🎬 Recommend Movies",
+        " Recommend Movies",
         use_container_width=True
     )
 
