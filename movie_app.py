@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
 
-# ✅ MUST be first
+#page configration
 st.set_page_config(page_title="IMDB Movie Recommender", page_icon="🎬", layout="wide")
 st.caption("🎯 A movie recommendation system built with Python, Streamlit, and data analysis techniques.")
 # 🎨 CSS
@@ -56,9 +56,10 @@ st.markdown("---")
 # 📊 Load data
 @st.cache_data(show_spinner=False)
 def load_data():
-    df = pd.read_csv('imbd orginal.csv')
+    df = pd.read_csv('imdb orginal.csv')
     df = df.dropna(subset=['Year', 'Genre', 'Rating'])
     df['Year'] = df['Year'].astype(int)
+    df['Duration (min)'] = pd.to_numeric(df['Duration (min)'], errors='coerce').astype('Int64')
 
     df['Genre'] = df['Genre'].astype(str).str.split(',')
 
@@ -89,14 +90,17 @@ col1, col2, col3 = st.columns([2,1,1])
 with col1:
     genre = st.selectbox(
         'Choose Your Favorite Genre',
-        sorted(set(df['Genre'].explode()))
+        sorted(df_exploded['Genre'].unique())
     )
 
 min_year = int(df['Year'].min())
 max_year = int(df['Year'].max())
 
 with col2:
-    start_year = st.number_input('Start Year', min_value=min_year, max_value=max_year, value=min_year)
+    start_year = st.number_input('Start Year', 
+                                 min_value=min_year,
+                                 max_value=max_year,
+                                 value=min_year)
 
 with col3:
     end_year = st.number_input('End Year',
@@ -108,7 +112,7 @@ with col3:
     )
                         
 
-# 🎬 CENTERED BUTTON (IMPORTANT: OUTSIDE LOOP)
+# 🎬 CENTERED BUTTON recommender
 st.markdown("---")
 
 colA, colB, colC = st.columns([1,4,1])
@@ -129,7 +133,7 @@ def create_wordcloud(text):
         height=120,
         background_color=None,
         stopwords=STOPWORDS,
-        colormap='cool'
+        colormap='plasma'
     ).generate(str(text))
     
     fig, ax = plt.subplots(figsize=(2.5, 1.2))
@@ -151,13 +155,10 @@ def recommend_movies(genre, start_year, end_year, top_n=3):
     df_filtered = df_filtered.drop_duplicates(subset=['Title'])
     df_filtered = df_filtered.sort_values(by='Rating', ascending=False).head(top_n)
 
-    return df_filtered[['Title', 'Year', 'Rating', 'Description', 'Poster', 'Review']]
+    return df_filtered[['Title', 'Year', 'Rating','Director','Duration (min)','Cast' ,'Description', 'Poster', 'Review']]
 
-# 🎥 SHOW RESULTS (AFTER BUTTON)
+# 🎥 SHOW RESULTS
 if recommend:
-    if start_year > end_year:
-        st.error("Start year cannot be greater than end year!")
-    else:
         movies = recommend_movies(genre, start_year, end_year)
 
         if movies.empty:
@@ -183,6 +184,9 @@ if recommend:
                         f"<span class='rating'>⭐ {row['Rating']}</span> | 📅 {row['Year']}",
                         unsafe_allow_html=True
                     )
+                    st.markdown(f"⏱ **Duration:** {row['Duration (min)']} min")
+                    st.markdown(f"🎬 **Director:** {row['Director']}")
+                    st.markdown(f"🎭 **Cast:** {row['Cast']}")
 
                     if pd.notna(row['Description']):
                         with st.expander("📝 Description"):
@@ -196,7 +200,7 @@ if recommend:
                                 plt.close(fig)
                                 
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 #movie analysis
 st.sidebar.header("📊 Dataset Insights")
 
